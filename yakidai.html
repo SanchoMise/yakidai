@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panier Yakidai</title>
+<style>
+:root{
+  --bg:#faf6ef; --card:#ffffff; --ink:#2a2420; --mute:#7a6f66; --line:#e6dccd;
+  --accent:#b5362b; --accent-ink:#ffffff; --ok:#2f7d4f; --warn-bg:#fff3d6; --warn-ink:#7a5200; --bad:#b5362b;
+  --chip:#f0e7d8; --soft:#f6efe3;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1715; --card:#26211e; --ink:#f1e9df; --mute:#a79a8d; --line:#3a332e;
+    --accent:#e2574a; --accent-ink:#1b1715; --ok:#6fcf97; --warn-bg:#3b3015; --warn-ink:#f2c86a; --bad:#ff8a7e;
+    --chip:#332c27; --soft:#2c2622;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1715; --card:#26211e; --ink:#f1e9df; --mute:#a79a8d; --line:#3a332e;
+  --accent:#e2574a; --accent-ink:#1b1715; --ok:#6fcf97; --warn-bg:#3b3015; --warn-ink:#f2c86a; --bad:#ff8a7e;
+  --chip:#332c27; --soft:#2c2622;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:20px 16px 60px}
+header h1{margin:0;font:700 1.6rem/1.2 Georgia,"Times New Roman",serif;letter-spacing:.02em}
+header p{margin:.25rem 0 0;color:var(--mute);font-size:.9rem}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:18px 0 6px;background:var(--card)}
+.seg button{border:0;background:none;color:var(--ink);padding:9px 20px;font:inherit;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.hours{color:var(--mute);font-size:.85rem;margin:0 0 14px}
+.hours b{color:var(--ink)}
+textarea{width:100%;min-height:170px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit;resize:vertical}
+textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:10px 0}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 16px;border-radius:10px;font:inherit;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.opts{display:flex;flex-wrap:wrap;gap:18px;color:var(--mute);font-size:.88rem;align-items:center}
+.opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.opts select{font:inherit;padding:3px 6px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+h2{font:700 1.15rem/1.3 Georgia,serif;margin:26px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--chip);border-radius:999px;padding:4px 11px;font-size:.85rem}
+.chip.bad{background:none;border:1px dashed var(--bad);color:var(--bad)}
+.chip small{color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0}
+.sol-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.badge{display:inline-block;background:var(--accent);color:var(--accent-ink);font-size:.75rem;font-weight:700;padding:2px 9px;border-radius:999px;margin-right:8px;text-transform:uppercase;letter-spacing:.04em}
+.badge.alt{background:var(--chip);color:var(--ink)}
+.total{font:700 1.7rem Georgia,serif}
+.summary{color:var(--mute);margin:.2rem 0 .6rem}
+.formula{display:grid;grid-template-columns:auto 1fr auto;gap:4px 14px;align-items:start;border-top:1px solid var(--line);padding:12px 0}
+.formula:first-of-type{border-top:0}
+.code{font:700 1.15rem Georgia,serif;background:var(--accent);color:var(--accent-ink);border-radius:8px;padding:4px 10px;white-space:nowrap}
+.code.carte{background:var(--chip);color:var(--ink)}
+.price{font-weight:700;white-space:nowrap}
+.desc{font-size:.95rem}
+.covers{font-size:.85rem;color:var(--ok);margin-top:2px}
+.extra{font-size:.85rem;color:var(--mute);margin-top:2px}
+.note{background:var(--warn-bg);color:var(--warn-ink);border-radius:8px;padding:7px 10px;font-size:.88rem;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:.93rem}
+td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:top}
+td.r{text-align:right;white-space:nowrap}
+.tot-line{display:flex;justify-content:space-between;border-top:2px solid var(--line);margin-top:8px;padding-top:8px;font-weight:700}
+.cmp{color:var(--mute);font-size:.85rem;margin-top:4px}
+details{margin:10px 0}
+summary{cursor:pointer;font-weight:600}
+.menu-list{font-size:.9rem}
+.menu-list .it{display:grid;grid-template-columns:70px 1fr auto;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
+.menu-list h3{margin:16px 0 4px;font:700 .95rem Georgia,serif;color:var(--accent)}
+.search{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;margin:8px 0}
+.empty{color:var(--mute);padding:20px 0}
+.err{color:var(--bad)}
+@media (max-width:520px){.formula{grid-template-columns:auto 1fr}.formula .price{grid-column:2}.total{font-size:1.4rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Panier Yakidai</h1>
+    <p>41 rue de la Roquette, Paris 11e · décrivez ce que vous voulez, l'app trouve la combinaison au meilleur prix.</p>
+  </header>
+
+  <div class="seg" role="group" aria-label="Service">
+    <button id="b-midi" aria-pressed="true">Midi</button>
+    <button id="b-soir" aria-pressed="false">Soir</button>
+  </div>
+  <p class="hours" id="hours"></p>
+
+  <textarea id="order" spellcheck="false" placeholder="Une ligne par item, par exemple :&#10;6 gyozas&#10;3 paires brochettes boulettes de poulet&#10;6 california saumon avocat&#10;4 sushi saumon&#10;1 riz&#10;2 soupes"></textarea>
+  <div class="row">
+    <button class="btn primary" id="go">Trouver la meilleure combinaison</button>
+    <button class="btn" id="example">Exemple</button>
+    <button class="btn" id="clear">Effacer</button>
+  </div>
+  <div class="opts">
+    <label><input type="checkbox" id="o-flex" checked> Brochettes et californias (de même type) modifiables</label>
+    <label>Formules max <select id="o-max"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></label>
+  </div>
+
+  <div id="parsed"></div>
+  <div id="out"></div>
+
+  <details id="full">
+    <summary>Voir le menu complet</summary>
+    <input class="search" id="q" placeholder="Filtrer (ex. saumon, R1, brochette)">
+    <div class="menu-list" id="menu-list"></div>
+  </details>
+</div>
+
+<script id="core">
+/* ============ DONNÉES ============ */
+const SSR = ['soupe','salade','riz'];
+const expand = s => s.replace('SSR','soupe:1 salade:1 riz:1').replace(/\bSS\b/,'soupe:1 salade:1')
+  .split(/\s+/).filter(Boolean).map(t => { const i = t.lastIndexOf(':'); return [t.slice(0,i), +t.slice(i+1)]; });
+
+const FORMULES = [];
+function F(s, code, p, d, tags, flex, extra){
+  FORMULES.push(Object.assign({s, code, p, d, tags: expand(tags), flex: !!flex}, extra||{}));
+}
+const m = (code,p,d,tags,flex,extra)=>F('midi','Midi '+code,p,d,tags,flex,extra);
+const o = (code,p,d,tags,flex,extra)=>F('soir',code,p,d,tags,flex,extra);
+
+/* ---- Menu midi 1-30 (11h30-15h00) ---- */
+m('1',8.90,'5 brochettes (2 boulette de poulet, 1 bœuf au fromage, 1 aile de poulet, 1 poulet) + 1 soupe, 1 salade, 1 riz','SSR brochette:boulette:2 brochette:boeuffromage:1 brochette:aile:1 brochette:poulet:1',1);
+m('2',8.90,'12 california (6 saumon, 6 thon mayonnaise) + 1 soupe, 1 salade','SS california:saumon_avocat:6 california:thonmayo_avocat:6');
+m('2a',8.90,'Variante du n°2 : 6 california saumon, 6 maki saumon + 1 soupe, 1 salade','SS california:saumon_avocat:6 maki:saumon:6');
+m('3',9.90,'6 maki saumon, 4 sushi saumon + 1 soupe, 1 salade','SS maki:saumon:6 sushi:saumon:4');
+m('4',10.90,'8 printemps saumon, 3 brochettes (1 poulet, 1 boulette de poulet, 1 bœuf au fromage) + 1 soupe, 1 salade, 1 riz','SSR printemps:saumon:8 brochette:poulet:1 brochette:boulette:1 brochette:boeuffromage:1',1);
+m('5',11.90,'6 california saumon, 4 sashimi saumon, 2 sushi saumon + 1 soupe, 1 salade, 1 riz','SSR california:saumon_avocat:6 sashimi:saumon:4 sushi:saumon:2');
+m('6',13.90,'6 california saumon, 9 sashimi saumon + 1 soupe, 1 salade, 1 riz','SSR california:saumon_avocat:6 sashimi:saumon:9');
+m('7',11.90,'6 california saumon, 5 brochettes (1 boulette de poulet, 1 bœuf au fromage, 1 bœuf, 1 aile de poulet, 1 poulet) + 1 soupe, 1 salade, 1 riz','SSR california:saumon_avocat:6 brochette:boulette:1 brochette:boeuffromage:1 brochette:boeuf:1 brochette:aile:1 brochette:poulet:1',1);
+m('8',12.90,'6 california saumon, 3 raviolis, 2 sushi saumon, 2 brochettes fromage + 1 soupe, 1 salade, 1 riz','SSR california:saumon_avocat:6 ravioli:3 sushi:saumon:2 brochette:boeuffromage:2',1);
+m('9',11.90,'8 sushi saumon + 1 soupe, 1 salade','SS sushi:saumon:8');
+m('10',10.90,'12 maki (6 saumon, 6 thon), 2 brochettes fromage + 1 soupe, 1 salade, 1 riz','SSR maki:saumon:6 maki:thon:6 brochette:boeuffromage:2',1);
+m('11',8.50,'12 california végétarien (6 concombre, 6 avocat) + 1 soupe, 1 salade','SS california:concombre_avocat:12');
+m('12',9.90,'6 california concombre, 4 sushi avocat + 1 soupe, 1 salade','SS california:concombre_avocat:6 sushi:avocat:4');
+m('13',10.90,'6 saumon roll cheese, 6 california saumon avocat + 1 soupe, 1 salade','SS roll:cheese:6 california:saumon_avocat:6');
+m('14',9.90,'4 brochettes (2 saumon, 2 boulette de poulet) + 1 soupe, 1 salade, 1 riz','SSR brochette:saumon:2 brochette:boulette:2',1);
+m('15',10.50,'10 raviolis + 1 soupe, 1 salade, 1 riz','SSR ravioli:10');
+m('16',11.90,'4 raviolis japonais, 6 california saumon avocat, 2 brochettes bœuf au fromage + 1 soupe, 1 salade, 1 riz','SSR ravioli:4 california:saumon_avocat:6 brochette:boeuffromage:2',1);
+m('17',11.90,'3 raviolis japonais, 5 sushi saumon, 2 brochettes bœuf au fromage + 1 soupe, 1 salade, 1 riz','SSR ravioli:3 sushi:saumon:5 brochette:boeuffromage:2',1);
+m('18',12.90,'6 sushi (2 saumon, 2 thon, 2 daurade), 6 raviolis japonais + 1 soupe, 1 salade, 1 riz','SSR sushi:saumon:2 sushi:thon:2 sushi:daurade:2 ravioli:6');
+m('19',12.90,'6 maki rainbow, 6 sushi (2 saumon, 2 thon, 2 daurade) + 1 soupe, 1 salade','SS rainbow:6 sushi:saumon:2 sushi:thon:2 sushi:daurade:2');
+m('20',12.90,'8 printemps (saumon, cheese, avocat), 4 sushi saumon, 2 brochettes bœuf au fromage + 1 soupe, 1 salade','SS printemps:cheese:8 sushi:saumon:4 brochette:boeuffromage:2',1);
+m('21',11.50,'Chirashi saumon (12 tranches) + 1 soupe, 1 salade','SS chirashi:saumon:1');
+m('22',8.50,'4 bœuf au fromage + 1 soupe, 1 salade, 1 riz','SSR brochette:boeuffromage:4',1);
+m('23',9.90,'3 brochettes saumon + 1 soupe, 1 salade, 1 riz','SSR brochette:saumon:3',1);
+m('24',11.50,'4 sashimi saumon, 2 sushi saumon, 3 brochettes (1 poulet, 1 fromage, 1 boulette) + 1 soupe, 1 salade, 1 riz','SSR sashimi:saumon:4 sushi:saumon:2 brochette:poulet:1 brochette:boeuffromage:1 brochette:boulette:1',1);
+m('25',10.90,'4 sushi saumon, 3 brochettes (1 poulet, 1 fromage, 1 boulette) + 1 soupe, 1 salade, 1 riz','SSR sushi:saumon:4 brochette:poulet:1 brochette:boeuffromage:1 brochette:boulette:1',1);
+m('26',10.90,'6 maki rainbow, 3 brochettes (1 poulet, 1 fromage, 1 boulette) + 1 soupe, 1 salade, 1 riz','SSR rainbow:6 brochette:poulet:1 brochette:boeuffromage:1 brochette:boulette:1',1);
+m('27',11.50,'6 saumon roll cheese, 3 brochettes (1 poulet, 1 fromage, 1 boulette) + 1 soupe, 1 salade, 1 riz','SSR roll:cheese:6 brochette:poulet:1 brochette:boeuffromage:1 brochette:boulette:1',1);
+m('28',11.90,'6 cheese roll saumon, 4 sushi saumon + 1 soupe, 1 salade','SS roll:cheese:6 sushi:saumon:4');
+m('29',11.90,'6 saumon roll cheese, 6 raviolis poulet + 1 soupe, 1 salade, 1 riz','SSR roll:cheese:6 ravioli:6');
+m('30',12.90,'6 raviolis poulet, 5 brochettes (1 boulette de poulet, 1 bœuf au fromage, 1 bœuf, 1 aile de poulet, 1 poulet) + 1 soupe, 1 salade, 1 riz','SSR ravioli:6 brochette:boulette:1 brochette:boeuffromage:1 brochette:boeuf:1 brochette:aile:1 brochette:poulet:1',1);
+
+/* ---- Formules soir (18h30-23h00) ---- */
+o('F1',18.90,'Plat suggestion du chef : 21 sashimi assortiment + 1 soupe, 1 salade, 1 riz','SSR sashimi:assorti:21');
+o('F2',15.90,'Plat suggestion du chef : 15 sashimi assortiment + 1 soupe, 1 salade, 1 riz','SSR sashimi:assorti:15');
+o('F3',13.90,'Maki rainbow (12 pièces) + 1 soupe, 1 salade','SS rainbow:12');
+o('F4',15.90,'4 sushi saumon, 6 maki saumon, 6 sashimi saumon + 1 soupe, 1 salade, 1 riz','SSR sushi:saumon:4 maki:saumon:6 sashimi:saumon:6');
+o('F5',14.90,'10 sushi varié (5 saumon, 5 thon) + 1 soupe, 1 salade','SS sushi:saumon:5 sushi:thon:5');
+o('F6',12.90,'8 sushi varié (4 saumon, 2 thon, 1 daurade, 1 crevette) + 1 soupe, 1 salade','SS sushi:saumon:4 sushi:thon:2 sushi:daurade:1 sushi:crevette:1');
+o('F7',17.90,'24 maki (6 maki saumon, 6 california maki, 6 printemps saumon, 6 maki saumon roll) + 1 soupe, 1 salade','SS maki:saumon:6 california:saumon_avocat:6 printemps:saumon:6 roll:cheese:6');
+o('F8',13.90,'8 futo maki (avocat, saumon, thon, crabe, crevette, radis, concombre) + 1 soupe, 1 salade','SS futo:8');
+o('F9',14.90,'8 pièces spécial California maki + 1 soupe, 1 salade','SS california:special:8');
+o('F10',10.90,'6 california maki (saumon, avocat), 4 sushi saumon + 1 soupe, 1 salade','SS california:saumon_avocat:6 sushi:saumon:4');
+o('F11',15.90,'9 sashimi assortiment, 6 sushi assortiment + 1 soupe, 1 salade, 1 riz','SSR sashimi:assorti:9 sushi:assorti:6');
+o('F12',15.90,'9 sashimi assortiment, 6 maki saumon, 6 maki thon + 1 soupe, 1 salade, 1 riz','SSR sashimi:assorti:9 maki:saumon:6 maki:thon:6');
+o('F13',11.90,'6 california thon mayonnaise, 6 printemps thon mayonnaise + 1 soupe, 1 salade','SS california:thonmayo_avocat:6 printemps:thonmayo:6');
+o('F14',12.90,'3 témaki (thon, saumon, surimi) + 1 soupe, 1 salade','SS temaki:assorti:3');
+o('F15',10.90,'12 california saumon avocat + 1 soupe, 1 salade','SS california:saumon_avocat:12');
+o('F16',12.90,'12 maki (thon, saumon), 6 california maki (avocat, saumon) + 1 soupe, 1 salade','SS maki:saumon:6 maki:thon:6 california:saumon_avocat:6');
+o('F17',14.90,'6 cheese roll, 6 sushi saumon + 1 soupe, 1 salade','SS roll:cheese:6 sushi:saumon:6');
+o('F18',9.50,'12 california concombre avocat + 1 soupe, 1 salade','SS california:concombre_avocat:12');
+o('F19',13.90,'6 maki rainbow, 6 cheese roll + 1 soupe, 1 salade','SS rainbow:6 roll:cheese:6');
+o('F20',13.80,'6 maki saumon, 2 sushi saumon, 4 brochettes (poulet, boulette de poulet, bœuf fromage, aile de poulet) + 1 soupe, 1 salade, 1 riz','SSR maki:saumon:6 sushi:saumon:2 brochette:poulet:1 brochette:boulette:1 brochette:boeuffromage:1 brochette:aile:1',1);
+o('F21',14.90,'4 sashimi saumon, 2 sushi saumon, 5 brochettes (bœuf, poulet, boulette de poulet, bœuf fromage, aile de poulet) + 1 soupe, 1 salade, 1 riz','SSR sashimi:saumon:4 sushi:saumon:2 brochette:boeuf:1 brochette:poulet:1 brochette:boulette:1 brochette:boeuffromage:1 brochette:aile:1',1);
+o('Y1',8.90,'4 brochettes : 1 poulet, 1 boulette de poulet, 1 bœuf, 1 bœuf au fromage + 1 soupe, 1 salade, 1 riz','SSR brochette:poulet:1 brochette:boulette:1 brochette:boeuf:1 brochette:boeuffromage:1',1);
+o('Y2',10.90,'5 bœuf au fromage + 1 soupe, 1 salade, 1 riz','SSR brochette:boeuffromage:5',1);
+o('Y3',10.90,'5 brochettes : 1 poulet, 1 boulette de poulet, 1 bœuf, 1 aile de poulet, 1 bœuf au fromage + 1 soupe, 1 salade, 1 riz','SSR brochette:poulet:1 brochette:boulette:1 brochette:boeuf:1 brochette:aile:1 brochette:boeuffromage:1',1);
+o('Y4',12.90,'7 brochettes : 1 poulet, 1 boulette de poulet, 1 bœuf, 1 canard, 2 bœuf au fromage, 1 aile de poulet + 1 soupe, 1 salade, 1 riz','SSR brochette:poulet:1 brochette:boulette:1 brochette:boeuf:1 brochette:canard:1 brochette:boeuffromage:2 brochette:aile:1',1);
+o('Y5',11.00,'4 brochettes (2 thon, 2 saumon) + 1 soupe, 1 salade, 1 riz','SSR brochette:thon:2 brochette:saumon:2',1);
+o('Y6',13.00,'4 brochettes (2 gambas, 2 saumon) + 1 soupe, 1 salade, 1 riz','SSR brochette:gambas:2 brochette:saumon:2',1);
+o('Y7',12.00,'5 brochettes (2 saumon, 3 fromage) + 1 soupe, 1 salade, 1 riz','SSR brochette:saumon:2 brochette:boeuffromage:3',1);
+o('Y8',14.80,'7 brochettes (2 saumon, 1 poulet, 1 boulette de poulet, 1 aile de poulet, 1 bœuf, 1 bœuf au fromage) + 1 soupe, 1 salade, 1 riz','SSR brochette:saumon:2 brochette:poulet:1 brochette:boulette:1 brochette:aile:1 brochette:boeuf:1 brochette:boeuffromage:1',1);
+o('Y9',18.90,'7 brochettes (2 gambas, 2 saumon, 2 thon, 1 coquille St-Jacques) + 1 soupe, 1 salade, 1 riz','SSR brochette:gambas:2 brochette:saumon:2 brochette:thon:2 brochette:stjacques:1',1);
+o('M1',12.80,'6 maki saumon, 5 brochettes (1 aile de poulet, 1 poulet, 1 boulette de poulet, 1 bœuf, 1 bœuf au fromage) + 1 soupe, 1 salade, 1 riz','SSR maki:saumon:6 brochette:aile:1 brochette:poulet:1 brochette:boulette:1 brochette:boeuf:1 brochette:boeuffromage:1',1);
+o('M1',12.80,'Variante thon : 6 maki thon, 5 brochettes (1 aile de poulet, 1 poulet, 1 boulette de poulet, 1 bœuf, 1 bœuf au fromage) + 1 soupe, 1 salade, 1 riz','SSR maki:thon:6 brochette:aile:1 brochette:poulet:1 brochette:boulette:1 brochette:boeuf:1 brochette:boeuffromage:1',1,{v:'maki thon'});
+o('M2',13.80,'4 sushi (2 saumon, 2 thon), 5 brochettes (1 boulette de poulet, 1 bœuf, 1 poulet, 1 aile de poulet, 1 bœuf au fromage) + 1 soupe, 1 salade, 1 riz','SSR sushi:saumon:2 sushi:thon:2 brochette:boulette:1 brochette:boeuf:1 brochette:poulet:1 brochette:aile:1 brochette:boeuffromage:1',1);
+o('M3',15.90,'9 sashimi assortiment, 5 brochettes (1 aile de poulet, 1 boulette de poulet, 1 bœuf, 1 poulet, 1 bœuf au fromage) + 1 soupe, 1 salade, 1 riz','SSR sashimi:assorti:9 brochette:aile:1 brochette:boulette:1 brochette:boeuf:1 brochette:poulet:1 brochette:boeuffromage:1',1);
+o('M4',14.80,'6 maki rainbow, 5 brochettes (1 aile de poulet, 1 boulette de poulet, 1 bœuf, 1 poulet, 1 bœuf au fromage) + 1 soupe, 1 salade, 1 riz','SSR rainbow:6 brochette:aile:1 brochette:boulette:1 brochette:boeuf:1 brochette:poulet:1 brochette:boeuffromage:1',1);
+o('M5',16.80,'3 raviolis, 3 sushi, 6 sashimi, 6 maki saumon + 1 soupe, 1 salade, 1 riz','SSR ravioli:3 sushi:assorti:3 sashimi:assorti:6 maki:saumon:6');
+o('M6',17.80,'3 raviolis, 3 sushi, 6 sashimi, 3 brochettes (1 boulette de poulet, 1 poulet, 1 bœuf au fromage) + 1 soupe, 1 salade, 1 riz','SSR ravioli:3 sushi:assorti:3 sashimi:assorti:6 brochette:boulette:1 brochette:poulet:1 brochette:boeuffromage:1');
+o('R1',12.90,'Raviolis japonais (poulet, 6 pièces) + 4 brochettes (1 aile de poulet, 1 bœuf au fromage, 1 poulet, 1 boulette de poulet) + 1 soupe, 1 salade, 1 riz','SSR ravioli:6 brochette:aile:1 brochette:boeuffromage:1 brochette:poulet:1 brochette:boulette:1',1);
+o('R2',12.90,'Raviolis japonais (poulet, 6 pièces) + 6 california maki saumon + 1 soupe, 1 salade, 1 riz','SSR ravioli:6 california:saumon_avocat:6');
+o('R3',13.90,'Raviolis japonais (poulet, 6 pièces) + 8 sashimi saumon + 1 soupe, 1 salade, 1 riz','SSR ravioli:6 sashimi:saumon:8');
+o('R4',12.90,'Raviolis japonais (poulet, 6 pièces) + 4 sushi saumon + 1 soupe, 1 salade, 1 riz','SSR ravioli:6 sushi:saumon:4');
+o('R5',12.00,'12 raviolis poulet légumes + 1 soupe, 1 salade, 1 riz','SSR ravioli:12');
+o('C1',12.80,'Chirashi saumon dans un bol de riz vinaigré + 1 soupe, 1 salade','SS chirashi:saumon:1');
+o('C2',15.90,'Chirashi thon dans un bol de riz vinaigré + 1 soupe, 1 salade','SS chirashi:thon:1');
+o('C3',14.90,'Chirashi assortiment de poisson dans un bol de riz vinaigré + 1 soupe, 1 salade','SS chirashi:assorti:1');
+o('C4',14.90,'Tartare saumon et avocat dans un bol de riz vinaigré + 1 soupe, 1 salade','SS chirashi:tartare:1');
+o('C5',16.90,'Chirashi anguille dans un bol de riz vinaigré + 1 soupe, 1 salade','SS chirashi:anguille:1');
+o('Tempura ebi',12.90,'Menu tempura ebi : 6 crevettes panées + 1 soupe, 1 salade, 1 riz','SSR tempura:1');
+o('Poulet pané',10.90,'Menu poulet pané sur riz + 1 soupe, 1 salade','SS poulet_pane:1');
+o('Saumon pané',15.90,'Menu saumon pané sur riz + 1 soupe, 1 salade','SS saumon_pane:1');
+o('Nouille sautée',10.90,'Nouille sautée (crevette, poulet ou bœuf au choix) + 1 soupe, 1 salade','SS nouille_sautee:1');
+o('Soupe de nouille',10.90,'Soupe de nouille (crevette, poulet ou bœuf au choix) + 1 salade','salade:1 soupe_nouille:1');
+o('Yakidai 1',20.00,'Menu Yakidai 1 : 6 california maki, 6 sushi assortiment, 9 sashimi assortiment + 1 soupe, 1 salade, 1 riz','SSR california:saumon_avocat:6 sushi:assorti:6 sashimi:assorti:9');
+o('Yakidai 2',42.00,'Menu Yakidai 2 (pour 2 personnes) : 10 sushi assortiment, 12 maki saumon et thon, 6 california saumon, 20 sashimi assortiment + 2 soupes, 2 salades, 2 riz','soupe:2 salade:2 riz:2 sushi:assorti:10 maki:saumon:6 maki:thon:6 california:saumon_avocat:6 sashimi:assorti:20');
+o('Yakidai 3',54.00,'Menu Yakidai 3 (pour 2 personnes) : 8 sushi assortiment, 6 maki saumon, 6 california saumon, 20 sashimi assortiment, 6 brochettes (2 coquille St-Jacques, 2 saumon, 2 gambas) + 2 soupes, 2 salades, 2 riz','soupe:2 salade:2 riz:2 sushi:assorti:8 maki:saumon:6 california:saumon_avocat:6 sashimi:assorti:20 brochette:stjacques:2 brochette:saumon:2 brochette:gambas:2');
+o('Yakidai 4',52.00,'Menu Yakidai 4 (pour 2 personnes) : 8 sushi assortiment, 6 maki saumon, 6 california saumon, 20 sashimi assortiment, 8 brochettes (2 poulet, 2 bœuf, 2 boulettes de poulet, 2 bœuf aux fromages) + 2 soupes, 2 salades, 2 riz','soupe:2 salade:2 riz:2 sushi:assorti:8 maki:saumon:6 california:saumon_avocat:6 sashimi:assorti:20 brochette:poulet:2 brochette:boeuf:2 brochette:boulette:2 brochette:boeuffromage:2');
+
+/* ---- Carte à l'unité (valable midi et soir) : [clé, code, nom, pièces par portion, prix, rubrique] ---- */
+const CARTE = [];
+const HO='Hors d’œuvre';
+[
+ ['soupe','1','Soupe miso',1,2.5,HO],['salade','2','Salade de crudité',1,2.5,HO],
+ ['salade:saumon','3','Salade de saumon',1,7.5,HO],['salade:crevettes','4','Salade de crevettes',1,7.5,HO],
+ ['salade:algue','5','Salade d’algues',1,3.5,HO],['ravioli:legumes','6','Ravioli japonais légumes (6 pièces)',6,5.5,HO],
+ ['ravioli','7','Ravioli japonais poulet (6 pièces)',6,5.5,HO],['oshinko','8','Oshinko (radis mariné)',1,3.5,HO],
+ ['riz','9','Riz nature',1,2.0,HO],['riz:sushi','10','Riz sushi (vinaigré)',1,2.5,HO],['edamame','11','Edamame (fève de soja)',1,4.0,HO],
+ ['sashimi:saumon','18','Shaké (saumon) – 8 pièces',8,7.5,'Sashimi'],['sashimi:saumon','18','Shaké (saumon) – 15 pièces',15,14,'Sashimi'],
+ ['sashimi:thon','19','Maguro (thon) – 8 pièces',8,8.5,'Sashimi'],['sashimi:thon','19','Maguro (thon) – 15 pièces',15,15,'Sashimi'],
+ ['sashimi:daurade','20','Taï (daurade) – 8 pièces',8,8.5,'Sashimi'],['sashimi:daurade','20','Taï (daurade) – 15 pièces',15,15,'Sashimi'],
+ ['sashimi:maquereau','21','Saba (maquereau) – 8 pièces',8,7.5,'Sashimi'],['sashimi:maquereau','21','Saba (maquereau) – 15 pièces',15,14,'Sashimi'],
+ ['sashimi:assorti','23','Moriawase (assortiment) – 8 pièces',8,8.5,'Sashimi'],['sashimi:assorti','23','Moriawase (assortiment) – 15 pièces',15,15,'Sashimi'],
+ ['sushi:saumon','','Shaké (saumon)',2,4,'Sushi'],['sushi:thon','','Maguro (thon)',2,4.5,'Sushi'],['sushi:daurade','','Taï (daurade)',2,4.5,'Sushi'],
+ ['sushi:maquereau','','Saba (maquereau)',2,4,'Sushi'],['sushi:crevette','','Ebi (crevette)',2,5,'Sushi'],['sushi:ikura','','Ikura (œuf de saumon)',2,6.5,'Sushi'],
+ ['sushi:anguille','','Unagi (anguille)',2,6.5,'Sushi'],['sushi:tamago','','Tamago (œuf)',2,4,'Sushi'],
+ ['roll:cheese','','Cheese roll (riz et fromage enrobé saumon)',6,6,'Saumon roll'],['roll:saumon','','Saumon roll (riz, avocat, saumon)',6,6,'Saumon roll'],
+ ['roll:thon','','Thon roll',6,6,'Saumon roll'],['roll:thoncuit','','Thon cuit roll (thon cuit, avocat)',6,6,'Saumon roll'],['roll:masaco','','Masaco roll (saumon, avocat)',6,6,'Saumon roll'],
+ ['printemps:saumon','','Saumon (saumon, avocat)',6,6,'Maki de printemps'],['printemps:thon','','Thon (thon, avocat)',6,6,'Maki de printemps'],
+ ['printemps:thonmayo','','Thon mayonnaise',6,6,'Maki de printemps'],['printemps:vegetarien','','Végétarien (concombre, avocat)',6,5.5,'Maki de printemps'],
+ ['printemps:cheese','','Cheese Philadelphia (saumon, fromage, avocat, concombre)',6,6,'Maki de printemps'],
+ ['neige:saumon','','Neige saumon',6,5,'Neige roll'],['neige:thon','','Neige thon',6,5,'Neige roll'],['neige:thoncuit','','Neige thon cuit',6,5,'Neige roll'],
+ ['neige:cheese','','Neige cheese',6,5,'Neige roll'],['neige:avocat','','Neige avocat',6,5,'Neige roll'],
+ ['omelette:saumon_avocat','','Saumon et avocat',6,6,'Omelette maki'],['omelette:fromage','','Fromage',6,6,'Omelette maki'],['omelette:thon_avocat','','Thon et avocat',6,6,'Omelette maki'],
+ ['omelette:thonmayo','','Thon mayonnaise',6,6,'Omelette maki'],['omelette:concombre_avocat','','Concombre et avocat',6,6,'Omelette maki'],
+ ['california:saumon_avocat','','Saumon avocat',6,5,'California maki'],['california:thon_avocat','','Thon avocat',6,5.5,'California maki'],
+ ['california:concombre_avocat','','Concombre avocat',6,5,'California maki'],['california:thonmayo_avocat','','Thon mayonnaise avocat',6,5.5,'California maki'],
+ ['california:ebifry','','Avocat ebi fry',6,6,'California maki'],
+ ['maki:saumon','','Saumon',6,4,'Maki'],['maki:thon','','Thon',6,4.5,'Maki'],['maki:anguille','','Anguille',6,6.5,'Maki'],['maki:oeufsaumon','','Œufs de saumon',6,6.5,'Maki'],
+ ['maki:thonmayo','','Thon mayonnaise',6,4.5,'Maki'],['maki:fromage','','Fromage',6,4,'Maki'],['maki:concombre','','Concombre',6,3.8,'Maki'],['maki:avocat','','Avocat',6,3.8,'Maki'],
+ ['maki:saumonfromage','','Saumon et fromage',6,5,'Maki'],['maki:surimi','','Surimi',6,3.8,'Maki'],
+ ['temaki:saumon_avocat','','Saumon et avocat',1,5,'Temaki'],['temaki:thon_avocat','','Thon et avocat',1,5.5,'Temaki'],['temaki:tartare','','Tartare de saumon, ciboulette, avocat',1,5,'Temaki'],
+ ['temaki:anguille','','Anguille et concombre',1,6.5,'Temaki'],['temaki:oeufsaumon','','Œufs de saumon et avocat',1,6.5,'Temaki'],
+ ['brochette:saumon','B1','Saumon (la paire)',2,4.5,'Yakitori'],['brochette:thon','B2','Thon (la paire)',2,5,'Yakitori'],['brochette:poulet','B3','Poulet (la paire)',2,3.5,'Yakitori'],
+ ['brochette:champignon','B4','Champignon (la paire)',2,3,'Yakitori'],['brochette:boulette','B5','Boulettes de poulet (la paire)',2,3.5,'Yakitori'],
+ ['brochette:aile','B6','Aile de poulet (la paire)',2,3.5,'Yakitori'],['brochette:boeuf','B7','Bœuf (la paire)',2,4,'Yakitori'],['brochette:boeuffromage','B8','Bœuf au fromage (la paire)',2,4,'Yakitori'],
+ ['brochette:gambas','B9','Gambas (la paire)',2,6.5,'Yakitori'],['brochette:stjacques','B10','Coquille St-Jacques (la paire)',2,7.5,'Yakitori'],
+].forEach(([k,code,n,u,p,sect])=>CARTE.push({k,code,n,u,p,sect}));
+
+const CARTE_BY_KEY = {};
+CARTE.forEach(c => (CARTE_BY_KEY[c.k] = CARTE_BY_KEY[c.k] || []).push(c));
+
+/* ---- Libellés ---- */
+const CAT = {sushi:'Sushi',sashimi:'Sashimi',maki:'Maki',california:'California',roll:'Roll',printemps:'Printemps',neige:'Neige roll',omelette:'Omelette maki',temaki:'Temaki',brochette:'Brochette',chirashi:'Chirashi',salade:'Salade',ravioli:'Raviolis',riz:'Riz'};
+const VAR = {saumon:'saumon',thon:'thon',daurade:'daurade',maquereau:'maquereau',crevette:'crevette',anguille:'anguille',ikura:'œufs de saumon',tamago:'œuf',assorti:'assortiment',
+  saumon_avocat:'saumon avocat',thon_avocat:'thon avocat',concombre_avocat:'concombre avocat',thonmayo_avocat:'thon mayonnaise avocat',ebifry:'avocat ebi fry',special:'spécial',
+  cheese:'cheese',masaco:'masaco',vegetarien:'végétarien',fromage:'fromage',concombre:'concombre',avocat:'avocat',oeufsaumon:'œufs de saumon',
+  thonmayo:'thon mayonnaise',saumonfromage:'saumon et fromage',surimi:'surimi',boulette:'boulette de poulet',aile:'aile de poulet',poulet:'poulet',boeuf:'bœuf',
+  boeuffromage:'bœuf au fromage',champignon:'champignon',gambas:'gambas',stjacques:'coquille St-Jacques',canard:'canard',tartare:'tartare de saumon',legumes:'légumes',crevettes:'crevettes',algue:'algues'};
+const SOLO = {soupe:'Soupe miso',salade:'Salade de crudité',riz:'Riz nature',ravioli:'Raviolis japonais',rainbow:'Maki rainbow',futo:'Futo maki',tempura:'Menu tempura ebi',poulet_pane:'Poulet pané sur riz',
+  saumon_pane:'Saumon pané sur riz',nouille_sautee:'Nouille sautée',soupe_nouille:'Soupe de nouille',oshinko:'Oshinko',edamame:'Edamame','riz:sushi':'Riz sushi','ravioli:legumes':'Raviolis légumes'};
+function label(k){
+  if (SOLO[k]) return SOLO[k];
+  const [c,v] = k.split(':');
+  return (CAT[c]||c) + ' ' + (VAR[v]||v);
+}
+
+/* ============ PARSING DE LA LISTE ============ */
+const norm = s => s.toLowerCase().replace(/œ/g,'oe').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’'`]/g,' ');
+const WORDNUM = {un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10,onze:11,douze:12};
+
+function classify(t){
+  const has = r => r.test(t);
+  if (has(/soupe de nouille/)) return {key:'soupe_nouille'};
+  if (has(/nouille/)) return {key:'nouille_sautee'};
+  if (has(/tempura|crevettes? pane/)) return {key:'tempura'};
+  if (has(/poulet pane|katsu/)) return {key:'poulet_pane'};
+  if (has(/saumon pane/)) return {key:'saumon_pane'};
+  if (has(/chirashi|tartare/)) {
+    if (has(/thon/)) return {key:'chirashi:thon'};
+    if (has(/assort/)) return {key:'chirashi:assorti'};
+    if (has(/tartare/)) return {key:'chirashi:tartare'};
+    if (has(/anguille/)) return {key:'chirashi:anguille'};
+    return {key:'chirashi:saumon'};
+  }
+  if (has(/futo/)) return {key:'futo'};
+  if (has(/soupe|miso/)) return {key:'soupe'};
+  if (has(/salade/)) {
+    if (has(/saumon/)) return {key:'salade:saumon'};
+    if (has(/crevette/)) return {key:'salade:crevettes'};
+    if (has(/algue/)) return {key:'salade:algue'};
+    return {key:'salade'};
+  }
+  if (has(/\briz\b/)) return has(/sushi|vinaigr/) ? {key:'riz:sushi'} : {key:'riz'};
+  if (has(/oshinko|radis/)) return {key:'oshinko'};
+  if (has(/edamame/)) return {key:'edamame'};
+  if (has(/gyoza|ravioli|raviole/)) return has(/legume/) ? {key:'ravioli:legumes'} : {key:'ravioli'};
+  if (has(/brochette|yakitori|boulette|aile de poulet|boeuf|gambas|jacques|champignon|canard/) && !has(/sushi|maki|roll/)) {
+    if (has(/boulette/)) return {key:'brochette:boulette'};
+    if (has(/aile/)) return {key:'brochette:aile'};
+    if (has(/boeuf.*fromage|fromage/)) return {key:'brochette:boeuffromage'};
+    if (has(/boeuf/)) return {key:'brochette:boeuf'};
+    if (has(/canard/)) return {key:'brochette:canard'};
+    if (has(/gambas/)) return {key:'brochette:gambas'};
+    if (has(/jacques|coquille/)) return {key:'brochette:stjacques'};
+    if (has(/champignon/)) return {key:'brochette:champignon'};
+    if (has(/saumon/)) return {key:'brochette:saumon'};
+    if (has(/thon/)) return {key:'brochette:thon'};
+    if (has(/poulet/)) return {key:'brochette:poulet'};
+    return {key:'brochette:poulet', note:'type non précisé → poulet'};
+  }
+  if (has(/sashimi/)) {
+    if (has(/assort|varie/)) return {key:'sashimi:assorti'};
+    if (has(/thon/)) return {key:'sashimi:thon'};
+    if (has(/daurade|tai/)) return {key:'sashimi:daurade'};
+    if (has(/maquereau|saba/)) return {key:'sashimi:maquereau'};
+    if (has(/saumon/)) return {key:'sashimi:saumon'};
+    return {key:'sashimi:saumon', note:'type non précisé → saumon'};
+  }
+  if (has(/sushi/)) {
+    if (has(/assort|varie/)) return {key:'sushi:assorti'};
+    if (has(/ikura|oeuf.*saumon/)) return {key:'sushi:ikura'};
+    if (has(/thon/)) return {key:'sushi:thon'};
+    if (has(/daurade|tai/)) return {key:'sushi:daurade'};
+    if (has(/maquereau|saba/)) return {key:'sushi:maquereau'};
+    if (has(/crevette|ebi/)) return {key:'sushi:crevette'};
+    if (has(/anguille|unagi/)) return {key:'sushi:anguille'};
+    if (has(/oeuf|tamago/)) return {key:'sushi:tamago'};
+    if (has(/avocat/)) return {key:'sushi:avocat'};
+    if (has(/saumon/)) return {key:'sushi:saumon'};
+    return {key:'sushi:saumon', note:'type non précisé → saumon'};
+  }
+  if (has(/temaki/)) {
+    if (has(/thon/)) return {key:'temaki:thon_avocat'};
+    if (has(/tartare/)) return {key:'temaki:tartare'};
+    if (has(/anguille/)) return {key:'temaki:anguille'};
+    if (has(/oeuf/)) return {key:'temaki:oeufsaumon'};
+    return {key:'temaki:saumon_avocat'};
+  }
+  if (has(/rainbow/)) return {key:'rainbow'};
+  if (has(/neige/)) {
+    if (has(/thon cuit/)) return {key:'neige:thoncuit'};
+    if (has(/thon/)) return {key:'neige:thon'};
+    if (has(/cheese|fromage/)) return {key:'neige:cheese'};
+    if (has(/avocat/) && !has(/saumon/)) return {key:'neige:avocat'};
+    return {key:'neige:saumon'};
+  }
+  if (has(/printemps/)) {
+    if (has(/mayo/)) return {key:'printemps:thonmayo'};
+    if (has(/thon/)) return {key:'printemps:thon'};
+    if (has(/vegetarien|concombre/)) return {key:'printemps:vegetarien'};
+    if (has(/cheese|philadelphia|fromage/)) return {key:'printemps:cheese'};
+    return {key:'printemps:saumon'};
+  }
+  if (has(/omelette/)) {
+    if (has(/mayo/)) return {key:'omelette:thonmayo'};
+    if (has(/thon/)) return {key:'omelette:thon_avocat'};
+    if (has(/concombre/)) return {key:'omelette:concombre_avocat'};
+    if (has(/fromage/)) return {key:'omelette:fromage'};
+    return {key:'omelette:saumon_avocat'};
+  }
+  if (has(/thon cuit/)) return {key:'california:thonmayo_avocat', note:'= thon mayonnaise avocat'};
+  if (has(/california|cali\b/)) {
+    if (has(/ebi|crevette/)) return {key:'california:ebifry'};
+    if (has(/mayo/)) return {key:'california:thonmayo_avocat'};
+    if (has(/thon/)) return {key:'california:thon_avocat'};
+    if (has(/concombre/)) return {key:'california:concombre_avocat'};
+    return {key:'california:saumon_avocat'};
+  }
+  if (has(/roll|masaco/)) {
+    if (has(/masaco/)) return {key:'roll:masaco'};
+    if (has(/cheese|fromage/)) return {key:'roll:cheese'};
+    if (has(/thon/)) return {key:'roll:thon'};
+    return {key:'roll:saumon'};
+  }
+  if (has(/maki/)) {
+    if (has(/saumon.*fromage/)) return {key:'maki:saumonfromage'};
+    if (has(/mayo/)) return {key:'maki:thonmayo'};
+    if (has(/thon/)) return {key:'maki:thon'};
+    if (has(/anguille/)) return {key:'maki:anguille'};
+    if (has(/oeuf/)) return {key:'maki:oeufsaumon'};
+    if (has(/fromage/)) return {key:'maki:fromage'};
+    if (has(/concombre/)) return {key:'maki:concombre'};
+    if (has(/avocat/)) return {key:'maki:avocat'};
+    if (has(/surimi/)) return {key:'maki:surimi'};
+    return {key:'maki:saumon'};
+  }
+  return null;
+}
+
+function parseOrder(text){
+  const demand = {}, lines = [];
+  const parts = text.split(/[\n;,]+|\s+et\s+(?=\d)/i);
+  for (const raw of parts){
+    let t = norm(raw).trim();
+    if (!t) continue;
+    let qty = 1, mult = 1;
+    let mm = t.match(/^(\d+)\s*(?:x|fois)?\s*/);
+    if (mm){ qty = +mm[1]; t = t.slice(mm[0].length); }
+    else {
+      mm = t.match(/^(un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze)\b\s*/);
+      if (mm){ qty = WORDNUM[mm[1]]; t = t.slice(mm[0].length); }
+    }
+    if (/\bpaires?\b/.test(t)){ mult = 2; t = t.replace(/\bpaires?\b(\s+de)?/,' '); }
+    t = t.replace(/\b(pieces?|pcs|morceaux|portions?|de|d|du|des|la|le|les|l)\b/g,' ').replace(/\s+/g,' ').trim();
+    const c = classify(t);
+    if (!c){ lines.push({raw:raw.trim(), bad:true}); continue; }
+    const q = qty*mult;
+    demand[c.key] = (demand[c.key]||0) + q;
+    lines.push({raw:raw.trim(), key:c.key, qty:q, note:c.note});
+  }
+  return {demand, lines};
+}
+
+/* ============ SOLVEUR ============ */
+const coverCache = new Map();
+/* Coût minimal pour obtenir au moins `need` pièces avec les portions disponibles (DP) */
+function coverCarte(key, need){
+  const ck = key+'|'+need;
+  if (coverCache.has(ck)) return coverCache.get(ck);
+  const opts = CARTE_BY_KEY[key];
+  let res = null;
+  if (opts){
+    const maxU = Math.max(...opts.map(o=>o.u)), N = need+maxU;
+    const best = new Array(N+1).fill(Infinity), ch = new Array(N+1).fill(-1);
+    best[0]=0;
+    for (let n=1;n<=N;n++) opts.forEach((o,i)=>{ if(n>=o.u && best[n-o.u]+o.p<best[n]){ best[n]=best[n-o.u]+o.p; ch[n]=i; } });
+    let bn=-1, bc=Infinity;
+    for (let n=need;n<=N;n++) if (best[n]<bc-1e-9){ bc=best[n]; bn=n; }
+    const packs = {};
+    for (let n=bn;n>0;){ const i=ch[n]; packs[i]=(packs[i]||0)+1; n-=opts[i].u; }
+    res = {cost:bc, pieces:bn, packs:Object.entries(packs).map(([i,n])=>({item:opts[i], n}))};
+  }
+  coverCache.set(ck,res);
+  return res;
+}
+
+const FLEXP = ['brochette','cal:poisson','cal:veg','cal:ebi'];
+const CAL_POISSON = ['saumon_avocat','thon_avocat','thonmayo_avocat','special'];
+function groupOf(k){
+  if (k.startsWith('brochette:')) return 'brochette';
+  if (k.startsWith('california:')){ const v=k.slice(11); return CAL_POISSON.includes(v)?'cal:poisson':(v==='concombre_avocat'?'cal:veg':'cal:ebi'); }
+  return null;
+}
+const flexGroup = (f,k,opts) => { const g = opts.flex ? groupOf(k) : null; return g && (g!=='brochette' || f.flex) ? g : null; };
+
+function evaluate(combo, demand, opts){
+  const sup = {}, flexN = {}; let price = 0;
+  for (const f of combo){
+    price += f.p;
+    for (const [k,q] of f.tags){
+      const g = flexGroup(f,k,opts);
+      if (g) flexN[g] = (flexN[g]||0)+q; else sup[k] = (sup[k]||0)+q;
+    }
+  }
+  const left = {};
+  for (const k in demand) left[k] = Math.max(0, demand[k]-(sup[k]||0));
+  let carteCost = 0; const carte = []; const flexAlloc = {};
+  for (const g of FLEXP){
+    const ks = Object.keys(left).filter(k=>groupOf(k)===g && left[k]>0);
+    if (!ks.length) continue;
+    const tot = ks.reduce((a,k)=>a+left[k],0), C = Math.min(flexN[g]||0, tot);
+    // composition d'origine des formules : sert à départager à prix égal (moins de changements à demander)
+    const def = {};
+    for (const f of combo) for (const [k,q] of f.tags) if (flexGroup(f,k,opts)===g) def[k]=(def[k]||0)+q;
+    let dp = new Array(C+1).fill(Infinity); dp[0]=0;
+    const choice = [];
+    for (const k of ks){
+      const d = left[k];
+      const nd = new Array(C+1).fill(Infinity), ch = new Array(C+1).fill(0);
+      for (let c=0;c<=C;c++) for (let x=0;x<=Math.min(d,c);x++){
+        const l=d-x; let lc = 0;
+        if (l>0){ const r = coverCarte(k,l); lc = r ? r.cost : Infinity; }
+        const cost = dp[c-x]+lc+0.001*Math.max(0, x-(def[k]||0));
+        if (cost<nd[c]){ nd[c]=cost; ch[c]=x; }
+      }
+      dp = nd; choice.push(ch);
+    }
+    if (!isFinite(dp[C])) return null;
+    for (let i=ks.length-1, c=C; i>=0; i--){ const x=choice[i][c]; flexAlloc[ks[i]]=x; c-=x; }
+    for (const k of ks){
+      const l = left[k]-flexAlloc[k];
+      if (l>0){ const r = coverCarte(k,l); carteCost+=r.cost; carte.push({key:k, need:l, r}); }
+    }
+  }
+  for (const k in left){
+    if (left[k]===0 || groupOf(k)) continue;
+    const r = coverCarte(k,left[k]);
+    if (!r) return null;
+    carteCost += r.cost; carte.push({key:k, need:left[k], r});
+  }
+  let ssrSurplus = 0; const surplus = {};
+  for (const k in sup){ const e = sup[k]-(demand[k]||0); if (e>0){ surplus[k]=e; if (SSR.includes(k)) ssrSurplus+=e; } }
+  const flexFree = {};
+  for (const g of FLEXP){
+    const used = Object.keys(flexAlloc).filter(k=>groupOf(k)===g).reduce((a,k)=>a+flexAlloc[k],0);
+    if ((flexN[g]||0)-used>0) flexFree[g] = flexN[g]-used;
+  }
+  const total = price+carteCost;
+  return {combo, price, carteCost, total, score: total + 0.10*ssrSurplus + 0.001*combo.length, carte, flexAlloc, flexN, flexFree, surplus, sup};
+}
+
+function solve(demand, service, opts){
+  coverCache.clear();
+  const dk = Object.keys(demand);
+  const nonSSR = dk.filter(k=>!SSR.includes(k));
+  const hasG = g => dk.some(k=>groupOf(k)===g);
+  const cands = FORMULES.filter(f => f.s===service && f.tags.some(([k]) => nonSSR.includes(k) || (flexGroup(f,k,opts) && hasG(flexGroup(f,k,opts)))));
+  const LIM = 5, results = [], seen = new Set();
+  const sigOf = s => s.combo.map(f=>f.code+(f.v||'')).sort().join('|');
+  const push = sol => {
+    const sig = sigOf(sol);
+    if (seen.has(sig)) return; seen.add(sig);
+    results.push(sol); results.sort((a,b)=>a.score-b.score);
+    if (results.length>LIM){ seen.delete(sigOf(results[LIM])); results.length=LIM; }
+  };
+  const base = evaluate([], demand, opts); if (base) push(base);
+  (function dfs(start, combo, ps){
+    if (combo.length){ const s = evaluate(combo, demand, opts); if (s) push(s); }
+    if (combo.length>=opts.maxF) return;
+    for (let i=start;i<cands.length;i++){
+      const np = ps+cands[i].p;
+      if (results.length>=LIM && np>=results[LIM-1].score) continue;
+      dfs(i, combo.concat(cands[i]), np);
+    }
+  })(0, [], 0);
+  return {results, base, nCands: cands.length};
+}
+
+/* Détail affichable : ce que chaque formule couvre, consignes de changement, surplus */
+function explain(sol, demand){
+  const rem = Object.assign({}, demand);
+  const pool = Object.assign({}, sol.flexAlloc);
+  const cards = sol.combo.map(f=>{
+    const covers = {}, extra = {}; const notes = [];
+    for (const [k,q] of f.tags){
+      if (flexGroup(f,k,sol.opts)) continue;
+      const take = Math.min(q, rem[k]||0); rem[k]=(rem[k]||0)-take;
+      if (take) covers[k]=(covers[k]||0)+take;
+      if (q-take) extra[k]=(extra[k]||0)+q-take;
+    }
+    for (const g of FLEXP){
+      const tags = f.tags.filter(([k])=>flexGroup(f,k,sol.opts)===g);
+      if (!tags.length) continue;
+      const comp = {}; let N=0;
+      tags.forEach(([k,q])=>{comp[k]=(comp[k]||0)+q;N+=q;});
+      const asg = {}; let slots=N;
+      for (const k in comp){ const x=Math.min(comp[k], pool[k]||0, slots); if(x){asg[k]=x; pool[k]-=x; slots-=x;} }
+      for (const k in pool){ if(slots<=0) break; if(groupOf(k)!==g) continue; const x=Math.min(pool[k], slots); if(x){asg[k]=(asg[k]||0)+x; pool[k]-=x; slots-=x;} }
+      const same = Object.keys(comp).every(k=>(asg[k]||0)===comp[k]) && Object.keys(asg).every(k=>comp[k]===asg[k]);
+      for (const k in asg) covers[k]=(covers[k]||0)+asg[k];
+      if (!same){
+        const what = g==='brochette' ? 'brochettes' : 'californias';
+        const want = Object.entries(asg).map(([k,q])=>q+' '+label(k).replace('Brochette ','').replace('California ','california ')).join(', ');
+        notes.push('Changement de '+what+' : précisez à la commande « '+want+' »'+(slots>0?' (+ '+slots+' '+(g==='brochette'?'brochette':'pièce')+(slots>1?'s':'')+' au choix / comme prévu)':'')+'.');
+      }
+      if (slots>0) extra[g==='brochette'?'brochette:*':'california:*'] = slots;
+    }
+    return {f, covers, extra, note: notes.join(' ')||null};
+  });
+  return {cards};
+}
+</script>
+
+<script id="ui">
+const $ = id => document.getElementById(id);
+const fmt = n => n.toFixed(2).replace('.',',')+' €';
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let service = 'midi';
+try { const h = new Date().getHours(); service = (h>=16) ? 'soir' : 'midi'; } catch(e){}
+
+function setService(s){
+  service = s;
+  $('b-midi').setAttribute('aria-pressed', s==='midi');
+  $('b-soir').setAttribute('aria-pressed', s==='soir');
+  $('hours').innerHTML = s==='midi'
+    ? '<b>Midi</b> : menus 1 à 30, 11h30–15h00 (fermé samedi et dimanche midi). Boisson : +1,50 € avec un menu. Carte à l’unité incluse.'
+    : '<b>Soir</b> : formules F / Y / M / R / C / Yakidai, 18h30–23h00. Carte à l’unité incluse.';
+  buildMenu(); run();
+}
+
+function describeKey(k, q){ return q+' × '+label(k); }
+function chipList(obj){ return Object.entries(obj).map(([k,q])=> k==='brochette:*' ? q+' brochette(s) au choix' : k==='california:*' ? q+' california au choix' : q+' '+label(k)).join(', '); }
+
+function renderSol(sol, demand, badge, cls){
+  sol.opts = currentOpts();
+  const ex = explain(sol, demand);
+  const names = sol.combo.map(f=>f.code+(f.v?' ('+f.v+')':''));
+  const parts = names.concat(sol.carte.length ? ['carte'] : []);
+  let h = '<div class="card"><div class="sol-head"><div><span class="badge '+cls+'">'+badge+'</span><span class="summary">'+esc(parts.join(' + ')||'—')+'</span></div><div class="total">'+fmt(sol.total)+'</div></div>';
+  ex.cards.forEach(c=>{
+    h += '<div class="formula"><div class="code">'+esc(c.f.code)+(c.f.v?'<br><small>'+esc(c.f.v)+'</small>':'')+'</div><div><div class="desc">'+esc(c.f.d)+'</div>';
+    if (Object.keys(c.covers).length) h += '<div class="covers">✓ Couvre : '+esc(chipList(c.covers))+'</div>';
+    if (Object.keys(c.extra).length) h += '<div class="extra">En plus : '+esc(chipList(c.extra))+'</div>';
+    if (c.note) h += '<div class="note">⚠ '+esc(c.note)+'</div>';
+    h += '</div><div class="price">'+fmt(c.f.p)+'</div></div>';
+  });
+  if (sol.carte.length){
+    h += '<div style="border-top:1px solid var(--line);margin-top:4px"><h2 style="font-size:1rem;margin:12px 0 4px">À la carte</h2><table>';
+    sol.carte.forEach(c=>c.r.packs.forEach(p=>{
+      const it = p.item;
+      const unit = it.u>1 && it.sect!=='Yakitori' && it.sect!=='Sashimi' ? ' ('+it.u+' pièces)' : '';
+      h += '<tr><td>'+p.n+' ×</td><td>'+(it.code?'<b>'+esc(it.code)+'</b> ':'')+esc(it.sect)+' · '+esc(it.n)+esc(unit)+'<div class="extra">pour '+c.need+' '+esc(label(c.key))+(c.r.pieces>c.need?' (+'+(c.r.pieces-c.need)+' en trop, portion entière)':'')+'</div></td><td class="r">'+fmt(p.item.p*p.n)+'</td></tr>';
+    }));
+    h += '</table></div>';
+  }
+    h += '<div class="tot-line"><span>Total</span><span>'+fmt(sol.total)+'</span></div>';
+  if (sol.flexFree['brochette']) h += '<div class="note">'+sol.flexFree['brochette']+' brochette(s) des formules ne servent pas à votre liste : choisissez-les librement (ou laissez la composition habituelle).</div>';
+  const calFree = (sol.flexFree['cal:poisson']||0)+(sol.flexFree['cal:veg']||0)+(sol.flexFree['cal:ebi']||0);
+  if (calFree) h += '<div class="note">'+calFree+' pièce(s) de california des formules ne servent pas à votre liste : choisissez-les librement.</div>';
+  return h+'</div>';
+}
+
+function currentOpts(){ return {flex:$('o-flex').checked, maxF:+$('o-max').value}; }
+
+function run(){
+  const text = $('order').value;
+  try { localStorage.setItem('yakidai-order-v2', text); } catch(e){}
+  const {demand, lines} = parseOrder(text);
+  // pastilles "compris"
+  const merged = {}; lines.filter(l=>!l.bad).forEach(l=>{ merged[l.key] = merged[l.key] || {qty:0,notes:new Set()}; merged[l.key].qty += l.qty; if(l.note) merged[l.key].notes.add(l.note); });
+  let ph = '';
+  if (lines.length){
+    ph = '<h2>Compris</h2><div class="chips">'+Object.entries(merged).map(([k,v])=>'<span class="chip">'+v.qty+' × '+esc(label(k))+(v.notes.size?' <small>('+esc([...v.notes].join(', '))+')</small>':'')+'</span>').join('')
+      + lines.filter(l=>l.bad).map(l=>'<span class="chip bad">non compris : '+esc(l.raw)+'</span>').join('')+'</div>';
+  }
+  $('parsed').innerHTML = ph;
+  const out = $('out');
+  if (!Object.keys(demand).length){ out.innerHTML = '<p class="empty">Décrivez ce que vous souhaitez manger (une ligne par item) : l’app cherche ensuite la combinaison formules + carte la moins chère.</p>'; return; }
+  const opts = currentOpts();
+  const t0 = performance.now();
+  const {results, base} = solve(demand, service, opts);
+  const ms = Math.round(performance.now()-t0);
+  if (!results.length){ out.innerHTML = '<p class="err">Aucune combinaison possible pour ce service : certains items ne sont disponibles que dans l’autre service (ex. rainbow, chirashi, tempura…).</p>'; return; }
+  let h = '<h2>Meilleure combinaison</h2>' + renderSol(results[0], demand, results[0].combo.length?'Meilleur prix':'Tout à la carte','');
+  if (base && results[0].combo.length) h += '<p class="cmp">Tout à la carte : '+fmt(base.total)+' — économie de '+fmt(base.total-results[0].total)+'.</p>';
+  else if (!base) h += '<p class="cmp">Certains items n’existent pas à la carte : passer par une formule est obligatoire.</p>';
+  h += '<p class="cmp">Recherche sur 1 à '+opts.maxF+' formule(s), '+ms+' ms.</p>';
+  if (results.length>1){
+    h += '<details><summary>Autres combinaisons ('+(results.length-1)+')</summary>';
+    results.slice(1).forEach(s=>{ h += renderSol(s, demand, s.combo.length?('+'+fmt(s.total-results[0].total)):'Tout à la carte','alt'); });
+    h += '</details>';
+  }
+  h += '<div class="row"><button class="btn" id="copy">Copier le récapitulatif</button></div>';
+  out.innerHTML = h;
+  $('copy').onclick = () => {
+    const ex = explain(Object.assign(results[0],{opts}), demand);
+    let t = 'Commande Yakidai ('+(service==='midi'?'midi':'soir')+')\n';
+    ex.cards.forEach(c=>{ t += '- '+c.f.code+(c.f.v?' ('+c.f.v+')':'')+' — '+fmt(c.f.p)+(c.note?'\n  '+c.note:'')+'\n'; });
+    results[0].carte.forEach(c=>c.r.packs.forEach(p=>{ t += '- '+p.n+' × '+(p.item.code?p.item.code+' ':'')+p.item.sect+' '+p.item.n+' — '+fmt(p.item.p*p.n)+'\n'; }));
+    t += 'Total : '+fmt(results[0].total);
+    try { navigator.clipboard.writeText(t); $('copy').textContent='Copié ✓'; } catch(e){ $('copy').textContent='Copie impossible'; }
+  };
+}
+
+function buildMenu(){
+  const q = norm($('q').value||'').trim();
+  const match = s => !q || norm(s).includes(q);
+  let h = '<h3>Formules '+(service==='midi'?'midi':'soir')+'</h3>';
+  FORMULES.filter(f=>f.s===service && match(f.code+' '+f.d)).forEach(f=>{
+    h += '<div class="it"><b>'+esc(f.code)+'</b><span>'+esc(f.d)+(f.flex?' <em>(brochettes / californias modifiables)</em>':'')+'</span><span>'+fmt(f.p)+'</span></div>';
+  });
+  let sect = '';
+  CARTE.filter(c=>match(c.sect+' '+c.n+' '+c.code)).forEach(c=>{
+    if (c.sect!==sect){ sect=c.sect; h += '<h3>Carte · '+esc(sect)+'</h3>'; }
+    h += '<div class="it"><b>'+esc(c.code)+'</b><span>'+esc(c.n)+(c.u>1&&sect!=='Yakitori'&&sect!=='Sashimi'?' ('+c.u+' pièces)':'')+'</span><span>'+fmt(c.p)+'</span></div>';
+  });
+  $('menu-list').innerHTML = h;
+}
+
+const EXAMPLE = '6 gyozas\n2 paires brochettes boulettes de poulet\n2 paires brochettes de poulet\n6 california thon cuit avocat\n6 california saumon avocat\n4 sushi saumon\n1 riz\n2 soupes\n2 salades';
+let timer;
+$('order').addEventListener('input', ()=>{ clearTimeout(timer); timer=setTimeout(run,250); });
+$('go').onclick = run;
+$('example').onclick = ()=>{ $('order').value = EXAMPLE; run(); };
+$('clear').onclick = ()=>{ $('order').value=''; run(); };
+$('o-flex').onchange = run; $('o-max').onchange = run;
+$('b-midi').onclick = ()=>setService('midi'); $('b-soir').onclick = ()=>setService('soir');
+$('q').addEventListener('input', buildMenu);
+try { const s = localStorage.getItem('yakidai-order-v2'); if (s) $('order').value = s; } catch(e){}
+if (!$('order').value.trim()) $('order').value = EXAMPLE;
+setService(service);
+</script>
+</body>
+</html>
