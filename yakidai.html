@@ -72,6 +72,7 @@ summary{cursor:pointer;font-weight:600}
 .menu-list .it{display:grid;grid-template-columns:70px 1fr auto;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
 .menu-list h3{margin:16px 0 4px;font:700 .95rem Georgia,serif;color:var(--accent)}
 .search{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit;margin:8px 0}
+.btn.tog{padding:2px 10px;font-size:.8rem;margin-left:6px;border-radius:999px}
 .empty{color:var(--mute);padding:20px 0}
 .err{color:var(--bad)}
 @media (max-width:520px){.formula{grid-template-columns:auto 1fr}.formula .price{grid-column:2}.total{font-size:1.4rem}}
@@ -450,7 +451,8 @@ function groupOf(k){
   if (k.startsWith('california:')){ const v=k.slice(11); return CAL_POISSON.includes(v)?'cal:poisson':(v==='concombre_avocat'?'cal:veg':'cal:ebi'); }
   return null;
 }
-const flexGroup = (f,k,opts) => { const g = opts.flex ? groupOf(k) : null; return g && (g!=='brochette' || f.flex) ? g : null; };
+const flexId = (f,g) => f.code+(f.v?' ('+f.v+')':'')+'|'+g;
+const flexGroup = (f,k,opts) => { const g = opts.flex ? groupOf(k) : null; return g && (g!=='brochette' || f.flex) && !(opts.noFlex && opts.noFlex.has(flexId(f,g))) ? g : null; };
 
 function evaluate(combo, demand, opts){
   const sup = {}, flexN = {}; let price = 0;
@@ -540,7 +542,7 @@ function explain(sol, demand){
   const rem = Object.assign({}, demand);
   const pool = Object.assign({}, sol.flexAlloc);
   const cards = sol.combo.map(f=>{
-    const covers = {}, extra = {}; const notes = [];
+    const covers = {}, extra = {}; const notes = [], nlist = [];
     for (const [k,q] of f.tags){
       if (flexGroup(f,k,sol.opts)) continue;
       const take = Math.min(q, rem[k]||0); rem[k]=(rem[k]||0)-take;
@@ -560,11 +562,12 @@ function explain(sol, demand){
       if (!same){
         const what = g==='brochette' ? 'brochettes' : 'californias';
         const want = Object.entries(asg).map(([k,q])=>q+' '+label(k).replace('Brochette ','').replace('California ','california ')).join(', ');
+        nlist.push({id:flexId(f,g), g});
         notes.push('Changement de '+what+' : précisez à la commande « '+want+' »'+(slots>0?' (+ '+slots+' '+(g==='brochette'?'brochette':'pièce')+(slots>1?'s':'')+' au choix / comme prévu)':'')+'.');
       }
       if (slots>0) extra[g==='brochette'?'brochette:*':'california:*'] = slots;
     }
-    return {f, covers, extra, note: notes.join(' ')||null};
+    return {f, covers, extra, note: notes.join(' ')||null, notes, nlist};
   });
   return {cards};
 }
@@ -600,7 +603,7 @@ function renderSol(sol, demand, badge, cls){
     h += '<div class="formula"><div class="code">'+esc(c.f.code)+(c.f.v?'<br><small>'+esc(c.f.v)+'</small>':'')+'</div><div><div class="desc">'+esc(c.f.d)+'</div>';
     if (Object.keys(c.covers).length) h += '<div class="covers">✓ Couvre : '+esc(chipList(c.covers))+'</div>';
     if (Object.keys(c.extra).length) h += '<div class="extra">En plus : '+esc(chipList(c.extra))+'</div>';
-    if (c.note) h += '<div class="note">⚠ '+esc(c.note)+'</div>';
+    c.notes.forEach((n,i)=>{ h += '<div class="note">⚠ '+esc(n)+' <button class="btn tog" data-off="'+esc(c.nlist[i].id)+'">Ne pas changer</button></div>'; });
     h += '</div><div class="price">'+fmt(c.f.p)+'</div></div>';
   });
   if (sol.carte.length){
@@ -619,7 +622,8 @@ function renderSol(sol, demand, badge, cls){
   return h+'</div>';
 }
 
-function currentOpts(){ return {flex:$('o-flex').checked, maxF:+$('o-max').value}; }
+const noFlex = new Set();
+function currentOpts(){ return {flex:$('o-flex').checked, maxF:+$('o-max').value, noFlex}; }
 
 function run(){
   const text = $('order').value;
@@ -632,6 +636,7 @@ function run(){
     ph = '<h2>Compris</h2><div class="chips">'+Object.entries(merged).map(([k,v])=>'<span class="chip">'+v.qty+' × '+esc(label(k))+(v.notes.size?' <small>('+esc([...v.notes].join(', '))+')</small>':'')+'</span>').join('')
       + lines.filter(l=>l.bad).map(l=>'<span class="chip bad">non compris : '+esc(l.raw)+'</span>').join('')+'</div>';
   }
+  if (noFlex.size) ph += '<h2>Changements désactivés</h2><div class="chips">'+[...noFlex].map(id=>'<span class="chip">'+esc(id.replace('|brochette',' · brochettes').replace(/\|cal:\w+/,' · californias'))+' <button class="btn tog" data-on="'+esc(id)+'">Réactiver</button></span>').join('')+'</div>';
   $('parsed').innerHTML = ph;
   const out = $('out');
   if (!Object.keys(demand).length){ out.innerHTML = '<p class="empty">Décrivez ce que vous souhaitez manger (une ligne par item) : l’app cherche ensuite la combinaison formules + carte la moins chère.</p>'; return; }
@@ -651,6 +656,7 @@ function run(){
   }
   h += '<div class="row"><button class="btn" id="copy">Copier le récapitulatif</button></div>';
   out.innerHTML = h;
+  out.querySelectorAll('[data-off]').forEach(b=>b.onclick=()=>{ noFlex.add(b.dataset.off); run(); });
   $('copy').onclick = () => {
     const ex = explain(Object.assign(results[0],{opts}), demand);
     let t = 'Commande Yakidai ('+(service==='midi'?'midi':'soir')+')\n';
@@ -682,6 +688,7 @@ $('order').addEventListener('input', ()=>{ clearTimeout(timer); timer=setTimeout
 $('go').onclick = run;
 $('example').onclick = ()=>{ $('order').value = EXAMPLE; run(); };
 $('clear').onclick = ()=>{ $('order').value=''; run(); };
+$('parsed').addEventListener('click', e=>{ const id=e.target.dataset && e.target.dataset.on; if(id){ noFlex.delete(id); run(); } });
 $('o-flex').onchange = run; $('o-max').onchange = run;
 $('b-midi').onclick = ()=>setService('midi'); $('b-soir').onclick = ()=>setService('soir');
 $('q').addEventListener('input', buildMenu);
