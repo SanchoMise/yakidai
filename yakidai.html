@@ -542,7 +542,8 @@ function explain(sol, demand){
   const rem = Object.assign({}, demand);
   const pool = Object.assign({}, sol.flexAlloc);
   const cards = sol.combo.map(f=>{
-    const covers = {}, extra = {}; const notes = [], nlist = [];
+    const covers = {}, extra = {}; const notes = [], nlist = [], off = [];
+    if (sol.opts.flex) for (const g of new Set(f.tags.map(([k])=>groupOf(k)))) if (g && (g!=='brochette'||f.flex) && sol.opts.noFlex && sol.opts.noFlex.has(flexId(f,g))) off.push({id:flexId(f,g), g});
     for (const [k,q] of f.tags){
       if (flexGroup(f,k,sol.opts)) continue;
       const take = Math.min(q, rem[k]||0); rem[k]=(rem[k]||0)-take;
@@ -567,7 +568,7 @@ function explain(sol, demand){
       }
       if (slots>0) extra[g==='brochette'?'brochette:*':'california:*'] = slots;
     }
-    return {f, covers, extra, note: notes.join(' ')||null, notes, nlist};
+    return {f, covers, extra, note: notes.join(' ')||null, notes, nlist, off};
   });
   return {cards};
 }
@@ -593,7 +594,8 @@ function setService(s){
 function describeKey(k, q){ return q+' × '+label(k); }
 function chipList(obj){ return Object.entries(obj).map(([k,q])=> k==='brochette:*' ? q+' brochette(s) au choix' : k==='california:*' ? q+' california au choix' : q+' '+label(k)).join(', '); }
 
-function renderSol(sol, demand, badge, cls){
+function dtxt(d){ return d===null ? 'impossible' : Math.abs(d)<0.005 ? 'même prix' : (d>0?'+':'−')+fmt(Math.abs(d)); }
+function renderSol(sol, demand, badge, cls, deltas){
   sol.opts = currentOpts();
   const ex = explain(sol, demand);
   const names = sol.combo.map(f=>f.code+(f.v?' ('+f.v+')':''));
@@ -603,7 +605,8 @@ function renderSol(sol, demand, badge, cls){
     h += '<div class="formula"><div class="code">'+esc(c.f.code)+(c.f.v?'<br><small>'+esc(c.f.v)+'</small>':'')+'</div><div><div class="desc">'+esc(c.f.d)+'</div>';
     if (Object.keys(c.covers).length) h += '<div class="covers">✓ Couvre : '+esc(chipList(c.covers))+'</div>';
     if (Object.keys(c.extra).length) h += '<div class="extra">En plus : '+esc(chipList(c.extra))+'</div>';
-    c.notes.forEach((n,i)=>{ h += '<div class="note">⚠ '+esc(n)+' <button class="btn tog" data-off="'+esc(c.nlist[i].id)+'">Ne pas changer</button></div>'; });
+    c.notes.forEach((n,i)=>{ const id=c.nlist[i].id; h += '<div class="note">⚠ '+esc(n)+(deltas?' <button class="btn tog" data-off="'+esc(id)+'">Ne pas changer ('+dtxt(deltas[id])+')</button>':'')+'</div>'; });
+    if (deltas) c.off.forEach(x=>{ h += '<div class="note">⛔ Changement de '+(x.g==='brochette'?'brochettes':'californias')+' désactivé <button class="btn tog" data-on="'+esc(x.id)+'">Changer ('+dtxt(deltas[x.id])+')</button></div>'; });
     h += '</div><div class="price">'+fmt(c.f.p)+'</div></div>';
   });
   if (sol.carte.length){
@@ -645,7 +648,14 @@ function run(){
   const {results, base} = solve(demand, service, opts);
   const ms = Math.round(performance.now()-t0);
   if (!results.length){ out.innerHTML = '<p class="err">Aucune combinaison possible pour ce service : certains items ne sont disponibles que dans l’autre service (ex. rainbow, chirashi, tempura…).</p>'; return; }
-  let h = '<h2>Meilleure combinaison</h2>' + renderSol(results[0], demand, results[0].combo.length?'Meilleur prix':'Tout à la carte','');
+  const best = results[0]; best.opts = opts;
+  const deltas = {};
+  explain(best, demand).cards.forEach(c=>c.nlist.concat(c.off).forEach(x=>{
+    const nf = new Set(noFlex); nf.has(x.id) ? nf.delete(x.id) : nf.add(x.id);
+    const r = solve(demand, service, Object.assign({}, opts, {noFlex:nf})).results[0];
+    deltas[x.id] = r ? r.total-best.total : null;
+  }));
+  let h = '<h2>Meilleure combinaison</h2>' + renderSol(best, demand, best.combo.length?'Meilleur prix':'Tout à la carte','', deltas);
   if (base && results[0].combo.length) h += '<p class="cmp">Tout à la carte : '+fmt(base.total)+' — économie de '+fmt(base.total-results[0].total)+'.</p>';
   else if (!base) h += '<p class="cmp">Certains items n’existent pas à la carte : passer par une formule est obligatoire.</p>';
   h += '<p class="cmp">Recherche sur 1 à '+opts.maxF+' formule(s), '+ms+' ms.</p>';
@@ -688,7 +698,7 @@ $('order').addEventListener('input', ()=>{ clearTimeout(timer); timer=setTimeout
 $('go').onclick = run;
 $('example').onclick = ()=>{ $('order').value = EXAMPLE; run(); };
 $('clear').onclick = ()=>{ $('order').value=''; run(); };
-$('parsed').addEventListener('click', e=>{ const id=e.target.dataset && e.target.dataset.on; if(id){ noFlex.delete(id); run(); } });
+document.addEventListener('click', e=>{ const id=e.target.dataset && e.target.dataset.on; if(id){ noFlex.delete(id); run(); } });
 $('o-flex').onchange = run; $('o-max').onchange = run;
 $('b-midi').onclick = ()=>setService('midi'); $('b-soir').onclick = ()=>setService('soir');
 $('q').addEventListener('input', buildMenu);
